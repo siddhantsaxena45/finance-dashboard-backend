@@ -29,7 +29,7 @@ export const getDashboardSummary = async (req, res, next) => {
         totalExpense,
         netBalance,
         categoryTotals,
-        recentActivity: records.slice(-5).reverse() // last 5 records
+        recentActivity: records.slice(-5).reverse()
       }
     });
   } catch(e) { next(e); }

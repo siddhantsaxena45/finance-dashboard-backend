@@ -1,4 +1,31 @@
 import User from '../models/userModel.js';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-internship-key';
+
+export const loginUser = async (req, res, next) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required to login.' });
+    }
+
+    const user = await User.findByUsername(username);
+    if (!user || user.status !== 'active') {
+      return res.status(401).json({ error: 'Invalid or inactive user.' });
+    }
+
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    res.json({ message: 'Login successful', token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (e) {
+    next(e);
+  }
+};
 
 export const getAllUsers = async (req, res, next) => {
   try {

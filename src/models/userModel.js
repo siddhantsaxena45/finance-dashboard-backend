@@ -29,7 +29,6 @@ const User = {
     );
     return db.get('SELECT * FROM users WHERE id = ? AND isDeleted = 0', [id]);
   },
-  // Soft Delete implemented here
   delete: async (id) => {
     const db = await setupDB();
     const result = await db.run('UPDATE users SET isDeleted = 1 WHERE id = ?', [id]);

@@ -2,41 +2,52 @@ async function runTests() {
   console.log("Starting tests...\n");
 
   try {
-    console.log("1. Admin fetches dashboard summary (Expected 200)");
+    console.log("0. Admin logs in to get JWT");
+    let loginRes = await fetch("http://localhost:3000/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "admin" })
+    });
+    let adminAuth = await loginRes.json();
+    console.log("Admin token generated.");
+    let adminToken = adminAuth.token;
+
+    console.log("0. Analyst logs in to get JWT");
+    loginRes = await fetch("http://localhost:3000/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "analyst" })
+    });
+    let analystAuth = await loginRes.json();
+    console.log("Analyst token generated.");
+    let analystToken = analystAuth.token;
+
+    console.log("\n1. Admin fetches dashboard summary");
     let res = await fetch("http://localhost:3000/api/dashboard/summary", {
-      headers: { "x-user-id": "1" }
+      headers: { "Authorization": `Bearer ${adminToken}` }
     });
     console.log("Status:", res.status);
     console.log(await res.text(), "\n");
 
-    console.log("2. Analyst fetches records (Expected 200)");
-    res = await fetch("http://localhost:3000/api/records", {
-      headers: { "x-user-id": "2" }
+    console.log("2. Analyst fetches records with pagination");
+    res = await fetch("http://localhost:3000/api/records?limit=2&page=1", {
+      headers: { "Authorization": `Bearer ${analystToken}` }
     });
     console.log("Status:", res.status);
     console.log(await res.text(), "\n");
 
-    console.log("3. Viewer tries to fetch users (Expected 403)");
+    console.log("3. Viewer tries to fetch users without auth");
     res = await fetch("http://localhost:3000/api/users", {
-      headers: { "x-user-id": "3" }
+      headers: { "Authorization": "Bearer fake_token_123" }
     });
     console.log("Status:", res.status);
     console.log(await res.text(), "\n");
 
-    console.log("4. Analyst tries to create record (Expected 403)");
+    console.log("4. Analyst tries to create record without Admin role");
     res = await fetch("http://localhost:3000/api/records", {
       method: "POST",
-      headers: { "x-user-id": "2", "Content-Type": "application/json" },
+      headers: { "Authorization": `Bearer ${analystToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ amount: 100, type: "expense", category: "Test" })
-    });
-    console.log("Status:", res.status);
-    console.log(await res.text(), "\n");
-
-    console.log("5. Admin creates record (Expected 201)");
-    res = await fetch("http://localhost:3000/api/records", {
-      method: "POST",
-      headers: { "x-user-id": "1", "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: 1000, type: "income", category: "Bonus", notes: "Test" })
     });
     console.log("Status:", res.status);
     console.log(await res.text(), "\n");

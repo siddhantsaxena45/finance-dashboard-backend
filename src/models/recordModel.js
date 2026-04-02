@@ -51,7 +51,6 @@ const Record = {
   },
   delete: async (id) => {
     const db = await setupDB();
-    // SOFT DELETE
     const result = await db.run('UPDATE records SET isDeleted = 1 WHERE id = ?', [id]);
     return result.changes > 0;
   }

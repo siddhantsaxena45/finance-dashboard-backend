@@ -46,12 +46,22 @@ When deploying this backend to Render, we instruct their servers to strictly com
 * **Build Command**: `npm install --build-from-source sqlite3`
 * **Start Command**: `npm start`
 
-## API Authentication (Simulated)
-For simplicity and ease of testing, complex authentication was bypassed for a mocked header injection. To simulate matching distinct users, attach the `x-user-id` HTTP Header.
+## JWT API Authentication
+Authentication uses industry-standard JSON Web Tokens (JWT). All secured endpoints strictly require a valid `Bearer <token>` inside the `Authorization` header.
 
-The following users are securely pre-seeded in the database:
-- `x-user-id: 1` (Admin)
-- `x-user-id: 2` (Analyst)
-- `x-user-id: 3` (Viewer)
+To retrieve a JWT Token, hit the login endpoint:
 
-*In a production-ready application, this mocked injection logic would be seamlessly replaced by a standard JWT validation middleware extracting an encoded schema.*
+```bash
+POST /api/users/login
+Content-Type: application/json
+{
+  "username": "admin"
+}
+```
+
+The database comes pre-seeded with three test users representing the distinct roles:
+1. `admin` (Admin)
+2. `analyst` (Analyst)
+3. `viewer` (Viewer)
+
+Use the token returned from the login query aggressively inside your Authorization headers to navigate and write to the API. If tokens expire or correlate to a user who was marked 'inactive' or deleted, access is actively caught and denied by the Auth Middleware.

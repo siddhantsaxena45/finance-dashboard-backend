@@ -35,7 +35,6 @@ export async function setupDB() {
     );
   `);
 
-  // Safely alter existing tables in case the SQLite file was already created before we added soft delete. 
   try { await db.exec("ALTER TABLE users ADD COLUMN isDeleted INTEGER DEFAULT 0;"); } catch(e) {}
   try { await db.exec("ALTER TABLE records ADD COLUMN isDeleted INTEGER DEFAULT 0;"); } catch(e) {}
 
