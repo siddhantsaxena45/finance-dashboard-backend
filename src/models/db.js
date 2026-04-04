@@ -1,17 +1,18 @@
 import sqlite3Pkg from 'sqlite3';
-const sqlite3 = sqlite3Pkg.verbose();
 import { open } from 'sqlite';
 
-let dbPromise;
+const sqlite3 = sqlite3Pkg.verbose();
+let db;
 
 export async function setupDB() {
-  if (!dbPromise) {
-    dbPromise = open({
-      filename: './database.sqlite',
-      driver: sqlite3.Database
-    });
-  }
-  const db = await dbPromise;
+ 
+  if (db) return db;
+
+  db = await open({
+    filename: './database.sqlite',
+    driver: sqlite3.Database
+  });
+
 
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -35,18 +36,18 @@ export async function setupDB() {
     );
   `);
 
-  try { await db.exec("ALTER TABLE users ADD COLUMN isDeleted INTEGER DEFAULT 0;"); } catch(e) {}
-  try { await db.exec("ALTER TABLE records ADD COLUMN isDeleted INTEGER DEFAULT 0;"); } catch(e) {}
+  const { count } = await db.get('SELECT COUNT(*) as count FROM users');
+  
+  if (count === 0) {
+   
+    await db.run("INSERT INTO users (username, role) VALUES ('admin', 'Admin'), ('analyst', 'Analyst'), ('viewer', 'Viewer')");
 
-  const userCount = await db.get(`SELECT COUNT(*) as count FROM users`);
-  if (userCount.count === 0) {
-    await db.run(`INSERT INTO users (username, role, status) VALUES ('admin', 'Admin', 'active')`);
-    await db.run(`INSERT INTO users (username, role, status) VALUES ('analyst', 'Analyst', 'active')`);
-    await db.run(`INSERT INTO users (username, role, status) VALUES ('viewer', 'Viewer', 'active')`);
-    
-    await db.run(`INSERT INTO records (amount, type, category, date, notes, userId) VALUES (5000, 'income', 'Salary', '2026-04-01', 'Monthly salary', 1)`);
-    await db.run(`INSERT INTO records (amount, type, category, date, notes, userId) VALUES (200, 'expense', 'Food', '2026-04-02', 'Groceries', 1)`);
-    await db.run(`INSERT INTO records (amount, type, category, date, notes, userId) VALUES (1500, 'income', 'Freelance', '2026-04-03', 'Website dev', 1)`);
+    await db.run(`
+      INSERT INTO records (amount, type, category, date, notes, userId) VALUES 
+      (5000, 'income', 'Salary', '2026-04-01', 'Monthly salary', 1),
+      (200, 'expense', 'Food', '2026-04-02', 'Groceries', 1),
+      (1500, 'income', 'Freelance', '2026-04-03', 'Website dev', 1)
+    `);
   }
 
   return db;
